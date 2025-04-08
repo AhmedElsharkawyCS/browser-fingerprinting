@@ -1,0 +1,23 @@
+{
+  "name": "@ahmed-sharkawy-sde/browser-fingerprinting",
+  "version": "1.0.0",
+  "description": "A sample TypeScript npm library",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "npm:publish": "npm run build && npm publish --access public"
+  },
+  "keywords": [],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
