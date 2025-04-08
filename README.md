@@ -20,6 +20,8 @@ yarn add @ahmed-sharkawy-sde/browser-fingerprinting
 
 ## Usage
 
+JavaScript
+
 ```javascript
 import { getBrowserFingerprint, normalizeFingerprint, getFingerprintBase64Id, getFingerprintHashId } from "@ahmed-sharkawy-sde/browser-fingerprinting"
 
@@ -28,6 +30,8 @@ console.log(normalizeFingerprint()) // Printing all the attributes that used to 
 console.log(getFingerprintBase64Id()) // Printing the base64 id of the fingerprint
 getFingerprintHashId().then((id) => console.log(id)) // Printing the hash id of the fingerprint
 ```
+
+TypeScript
 
 ```typescript
 import {
