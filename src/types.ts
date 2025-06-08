@@ -55,9 +55,20 @@ export type PerformanceBenchmark = {
 
 export type QuirksInfo = {
   chrome: boolean
+  edge: boolean
+  brave: boolean
+  vivaldi: boolean
+  opera: boolean
+  mobile: boolean
+  tablet: boolean
+  desktop: boolean
+  mac: boolean
+  windows: boolean
+  linux: boolean
+  android: boolean
+  ios: boolean
   firefox: boolean
   safari: boolean
-  opera: boolean
   ie: boolean
 }
 
@@ -82,7 +93,7 @@ export type BrowserFingerprint = {
   storage: StorageInfo
   performanceBenchmark: PerformanceBenchmark
   localIPs: string[]
-  doNotTrack?: string | boolean
+  doNotTrack?: string | null
   quirks: QuirksInfo
   currentTimestamp: string
 }

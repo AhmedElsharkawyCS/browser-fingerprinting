@@ -1,5 +1,6 @@
 import type { BrowserFingerprint, NormalizedBrowserFingerprint } from "./types"
-import { getBrowserFingerprint, getFingerprintBase64Id, getFingerprintHashId, normalizeFingerprint } from "./lib"
+import { normalizeFingerprint, getBrowserFingerprintAsync, getFingerprintBase64, getFingerprintHashAsync, stringifyFingerprint } from "./lib"
 
-export { getBrowserFingerprint, normalizeFingerprint, getFingerprintBase64Id, getFingerprintHashId }
+export { getBrowserFingerprintAsync, normalizeFingerprint, getFingerprintBase64, getFingerprintHashAsync, stringifyFingerprint }
+
 export type { BrowserFingerprint, NormalizedBrowserFingerprint }

@@ -1,7 +1,7 @@
 {
-  "name": "@ahmed-sharkawy-sde/browser-fingerprinting",
+  "name": "@ahmedelsharkawycs/browser-fingerprinting",
   "version": "1.0.0",
-  "description": "A sample TypeScript npm library",
+  "description": "A powerful, privacy-focused browser fingerprinting library that generates unique identifiers based on browser and device characteristics. Perfect for fraud prevention, analytics, and user identification without cookies.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
@@ -14,9 +14,31 @@
     "prepare": "npm run build",
     "npm:publish": "npm run build && npm publish --access public"
   },
-  "keywords": [],
-  "author": "Your Name",
+  "keywords": [
+    "browser-fingerprinting",
+    "fingerprint",
+    "user-identification",
+    "fraud-prevention",
+    "analytics",
+    "tracking",
+    "canvas-fingerprinting",
+    "audio-fingerprinting",
+    "webgl",
+    "device-detection",
+    "privacy",
+    "security",
+    "typescript"
+  ],
+  "author": "Ahmed Sharkawy <ahmed.sharkawy.sde@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AhmedElsharkawyCS/browser-fingerprinting.git"
+  },
+  "homepage": "https://github.com/AhmedElsharkawyCS/browser-fingerprinting#readme",
+  "bugs": {
+    "url": "https://github.com/AhmedElsharkawyCS/browser-fingerprinting/issues"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }
