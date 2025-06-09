@@ -26,13 +26,38 @@ function getCanvasFingerprint(): string {
 
 async function getAudioFingerprint(): Promise<string> {
   try {
-    const audioContext = new (windowWithExtensions.AudioContext || windowWithExtensions.webkitAudioContext!)()
+    // Check if AudioContext is available
+    const AudioContextConstructor = windowWithExtensions.AudioContext || windowWithExtensions.webkitAudioContext
+    if (!AudioContextConstructor) {
+      return "no-audio-context"
+    }
+
+    const audioContext = new AudioContextConstructor()
+
+    // Check if the context is suspended (requires user gesture)
+    if (audioContext.state === "suspended") {
+      // Try to resume, but if it fails, generate a fallback fingerprint
+      try {
+        await audioContext.resume()
+      } catch (_) {
+        audioContext.close()
+        // Return a fallback fingerprint based on audio capabilities
+        return getAudioCapabilitiesFingerprint()
+      }
+    }
+
     const oscillator = audioContext.createOscillator()
     const analyser = audioContext.createAnalyser()
     const gain = audioContext.createGain()
     const scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1)
 
     return await new Promise<string>((resolve) => {
+      // Set a timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        audioContext.close()
+        resolve(getAudioCapabilitiesFingerprint())
+      }, 1000)
+
       oscillator.connect(analyser)
       analyser.connect(scriptProcessor)
       scriptProcessor.connect(gain)
@@ -42,14 +67,51 @@ async function getAudioFingerprint(): Promise<string> {
       oscillator.frequency.value = 10000
 
       scriptProcessor.onaudioprocess = (e) => {
-        resolve(String(e.inputBuffer.getChannelData(0).slice(0, 100)))
+        clearTimeout(timeout)
+        const audioData = String(e.inputBuffer.getChannelData(0).slice(0, 100))
         audioContext.close()
+        resolve(audioData)
       }
 
       oscillator.start(0)
     })
   } catch (_) {
-    return "unknown"
+    return getAudioCapabilitiesFingerprint()
+  }
+}
+
+function getAudioCapabilitiesFingerprint(): string {
+  try {
+    // Generate a fingerprint based on audio capabilities without requiring user gesture
+    const capabilities = {
+      hasAudioContext: !!(windowWithExtensions.AudioContext || windowWithExtensions.webkitAudioContext),
+      hasWebAudio: typeof window !== "undefined" && "AudioContext" in window,
+      hasMediaDevices: !!navigator.mediaDevices,
+      hasGetUserMedia: !!(
+        navigatorWithExtensions.getUserMedia ||
+        navigatorWithExtensions.webkitGetUserMedia ||
+        navigatorWithExtensions.mozGetUserMedia
+      ),
+      audioFormats: {
+        mp3: canPlayAudioType("audio/mpeg"),
+        wav: canPlayAudioType("audio/wav"),
+        ogg: canPlayAudioType("audio/ogg"),
+        m4a: canPlayAudioType("audio/mp4"),
+        webm: canPlayAudioType("audio/webm")
+      }
+    }
+    return JSON.stringify(capabilities)
+  } catch (_) {
+    return "audio-capabilities-unknown"
+  }
+}
+
+function canPlayAudioType(type: string): boolean {
+  try {
+    const audio = document.createElement("audio")
+    return audio.canPlayType(type) !== ""
+  } catch (_) {
+    return false
   }
 }
 

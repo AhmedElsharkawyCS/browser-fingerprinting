@@ -126,6 +126,9 @@ export type ExtendedNavigator = Navigator & {
   mozConnection?: any
   webkitConnection?: any
   msDoNotTrack?: string
+  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>
+  webkitGetUserMedia?: (constraints: MediaStreamConstraints, successCallback: (stream: MediaStream) => void, errorCallback: (error: any) => void) => void
+  mozGetUserMedia?: (constraints: MediaStreamConstraints, successCallback: (stream: MediaStream) => void, errorCallback: (error: any) => void) => void
 }
 
 export type ExtendedWindow = Window & {
