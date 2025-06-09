@@ -33,7 +33,7 @@ async function getAudioFingerprint(): Promise<string> {
     }
 
     let audioContext: AudioContext
-    
+
     try {
       audioContext = new AudioContextConstructor()
     } catch (error) {
@@ -275,8 +275,7 @@ async function getBrowserFingerprintAsync(): Promise<BrowserFingerprint> {
     performanceBenchmark,
     localIPs,
     doNotTrack,
-    quirks,
-    currentTimestamp: new Date().toISOString()
+    quirks
   }
 }
 

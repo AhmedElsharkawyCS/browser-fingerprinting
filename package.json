@@ -1,6 +1,6 @@
 {
   "name": "@ahmedelsharkawycs/browser-fingerprinting",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A powerful, privacy-focused browser fingerprinting library that generates unique identifiers based on browser and device characteristics. Perfect for fraud prevention, analytics, and user identification without cookies.",
   "main": "build/index.js",
   "types": "build/index.d.ts",

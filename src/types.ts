@@ -95,7 +95,6 @@ export type BrowserFingerprint = {
   localIPs: string[]
   doNotTrack?: string | null
   quirks: QuirksInfo
-  currentTimestamp: string
 }
 
 export type NormalizedBrowserFingerprint = {
@@ -127,7 +126,11 @@ export type ExtendedNavigator = Navigator & {
   webkitConnection?: any
   msDoNotTrack?: string
   getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>
-  webkitGetUserMedia?: (constraints: MediaStreamConstraints, successCallback: (stream: MediaStream) => void, errorCallback: (error: any) => void) => void
+  webkitGetUserMedia?: (
+    constraints: MediaStreamConstraints,
+    successCallback: (stream: MediaStream) => void,
+    errorCallback: (error: any) => void
+  ) => void
   mozGetUserMedia?: (constraints: MediaStreamConstraints, successCallback: (stream: MediaStream) => void, errorCallback: (error: any) => void) => void
 }
 
