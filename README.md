@@ -166,7 +166,7 @@ Generates a SHA-256 hash-based unique identifier.
 
 - **Canvas Fingerprint**: Rendered canvas signature
 - **WebGL Information**: Graphics card vendor and renderer
-- **Audio Fingerprint**: Audio context characteristics
+- **Audio Fingerprint**: Audio context characteristics (falls back to audio capabilities when user gesture is required)
 - **Font Detection**: Available system fonts
 
 ### Network & Storage
@@ -269,6 +269,10 @@ async function validateSession(storedFingerprintId: string) {
 | Opera   | 47+     | Full support   |
 
 **Note**: Some features may have limited availability on older browsers or privacy-focused configurations.
+
+### Audio Fingerprinting
+
+Due to browser security policies, AudioContext creation requires a user gesture. The library automatically falls back to audio capability detection when AudioContext cannot be created, ensuring the fingerprinting process never fails due to this restriction.
 
 ## Privacy & Ethics
 

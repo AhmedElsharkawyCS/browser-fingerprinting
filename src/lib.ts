@@ -32,50 +32,70 @@ async function getAudioFingerprint(): Promise<string> {
       return "no-audio-context"
     }
 
-    const audioContext = new AudioContextConstructor()
+    let audioContext: AudioContext
+    
+    try {
+      audioContext = new AudioContextConstructor()
+    } catch (error) {
+      // AudioContext creation failed, likely due to user gesture requirement
+      return getAudioCapabilitiesFingerprint()
+    }
 
     // Check if the context is suspended (requires user gesture)
     if (audioContext.state === "suspended") {
-      // Try to resume, but if it fails, generate a fallback fingerprint
+      // Don't try to resume without user gesture, just use fallback
+      audioContext.close()
+      return getAudioCapabilitiesFingerprint()
+    }
+
+    // If context is running, try to get audio fingerprint
+    if (audioContext.state === "running") {
       try {
-        await audioContext.resume()
-      } catch (_) {
+        const oscillator = audioContext.createOscillator()
+        const analyser = audioContext.createAnalyser()
+        const gain = audioContext.createGain()
+        const scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1)
+
+        return await new Promise<string>((resolve, reject) => {
+          // Set a timeout to prevent hanging
+          const timeout = setTimeout(() => {
+            audioContext.close()
+            resolve(getAudioCapabilitiesFingerprint())
+          }, 1000)
+
+          oscillator.connect(analyser)
+          analyser.connect(scriptProcessor)
+          scriptProcessor.connect(gain)
+          gain.connect(audioContext.destination)
+
+          oscillator.type = "triangle"
+          oscillator.frequency.value = 10000
+
+          scriptProcessor.onaudioprocess = (e) => {
+            clearTimeout(timeout)
+            try {
+              const audioData = String(e.inputBuffer.getChannelData(0).slice(0, 100))
+              audioContext.close()
+              resolve(audioData)
+            } catch (error) {
+              audioContext.close()
+              resolve(getAudioCapabilitiesFingerprint())
+            }
+          }
+
+          oscillator.start(0)
+        })
+      } catch (error) {
         audioContext.close()
-        // Return a fallback fingerprint based on audio capabilities
         return getAudioCapabilitiesFingerprint()
       }
     }
 
-    const oscillator = audioContext.createOscillator()
-    const analyser = audioContext.createAnalyser()
-    const gain = audioContext.createGain()
-    const scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1)
-
-    return await new Promise<string>((resolve) => {
-      // Set a timeout to prevent hanging
-      const timeout = setTimeout(() => {
-        audioContext.close()
-        resolve(getAudioCapabilitiesFingerprint())
-      }, 1000)
-
-      oscillator.connect(analyser)
-      analyser.connect(scriptProcessor)
-      scriptProcessor.connect(gain)
-      gain.connect(audioContext.destination)
-
-      oscillator.type = "triangle"
-      oscillator.frequency.value = 10000
-
-      scriptProcessor.onaudioprocess = (e) => {
-        clearTimeout(timeout)
-        const audioData = String(e.inputBuffer.getChannelData(0).slice(0, 100))
-        audioContext.close()
-        resolve(audioData)
-      }
-
-      oscillator.start(0)
-    })
-  } catch (_) {
+    // Context in unknown state, close and use fallback
+    audioContext.close()
+    return getAudioCapabilitiesFingerprint()
+  } catch (error) {
+    // Any other error, use fallback
     return getAudioCapabilitiesFingerprint()
   }
 }
@@ -270,7 +290,7 @@ function normalizeFingerprint(f: BrowserFingerprint): NormalizedBrowserFingerpri
       devicePixelRatio: f.screen.devicePixelRatio
     },
     timezone: f.timezone,
-    audio: f.audioFingerprint !== "unknown",
+    audio: f.audioFingerprint !== "unknown" && f.audioFingerprint !== "no-audio-context" && f.audioFingerprint !== "audio-capabilities-unknown",
     deviceMemory: f.deviceMemory,
     hardwareConcurrency: f.hardwareConcurrency,
     fonts: f.fontCheck,
