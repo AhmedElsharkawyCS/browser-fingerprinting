@@ -74,9 +74,12 @@ async function getAudioFingerprint(): Promise<string> {
           scriptProcessor.onaudioprocess = (e) => {
             clearTimeout(timeout)
             try {
-              const audioData = String(e.inputBuffer.getChannelData(0).slice(0, 100))
+              // Use a more deterministic approach for audio fingerprinting
+              const audioData = e.inputBuffer.getChannelData(0)
+              const sum = audioData.reduce((acc, val, idx) => acc + Math.abs(val) * idx, 0)
+              const fingerprint = Math.round(sum * 1000000).toString()
               audioContext.close()
-              resolve(audioData)
+              resolve(fingerprint)
             } catch (error) {
               audioContext.close()
               resolve(getAudioCapabilitiesFingerprint())
@@ -187,7 +190,8 @@ async function getBrowserFingerprintAsync(): Promise<BrowserFingerprint> {
 
   const canvasFingerprint = getCanvasFingerprint()
   const audioFingerprint = await getAudioFingerprint()
-  const localIPs = await getLocalIPs()
+  // Remove localIPs as they can change dynamically
+  // const localIPs = await getLocalIPs()
 
   const fonts = ["Arial", "Times New Roman", "Courier New", "Comic Sans MS", "Verdana", "Georgia"]
   const fontCheck: Record<string, boolean> = {}
@@ -228,10 +232,11 @@ async function getBrowserFingerprintAsync(): Promise<BrowserFingerprint> {
     cookies: cookieEnabled
   }
 
+  // Remove dynamic performance benchmark that changes on each call
   const performanceBenchmark = {
-    timing: performance.now(),
-    mathRandom: Math.random(),
-    mathSin: Math.sin(1)
+    timing: 0, // Static value instead of performance.now()
+    mathRandom: 0.123456789, // Static value instead of Math.random()
+    mathSin: Math.sin(1) // This is deterministic, keep it
   }
 
   const quirks = {
@@ -273,7 +278,7 @@ async function getBrowserFingerprintAsync(): Promise<BrowserFingerprint> {
     networkInfo,
     storage,
     performanceBenchmark,
-    localIPs,
+    localIPs: [], // Static empty array instead of dynamic IPs
     doNotTrack,
     quirks
   }
