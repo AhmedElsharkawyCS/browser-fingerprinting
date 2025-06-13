@@ -10,10 +10,10 @@ prevention, analytics, and user identification without cookies.
 
 ## Features
 
-- **Comprehensive Data Collection**: Gathers 20+ unique browser and device attributes
+- **Comprehensive Data Collection**: Gathers 15+ unique browser and device attributes
 - **Privacy-Focused**: No external dependencies or data transmission
 - **High Performance**: Optimized async operations with minimal impact
-- **Canvas & Audio Fingerprinting**: Advanced fingerprinting techniques
+- **Canvas Fingerprinting**: Advanced canvas-based fingerprinting technique
 - **Cross-Browser Support**: Works on all modern browsers
 - **Device Detection**: Mobile, tablet, and desktop identification
 - **TypeScript Support**: Full type safety and IntelliSense
@@ -52,14 +52,14 @@ pnpm add @ahmedelsharkawycs/browser-fingerprinting
 
 ```javascript
 import {
-  getBrowserFingerprintAsync,
+  getBrowserFingerprint,
   normalizeFingerprint,
   getFingerprintBase64,
   getFingerprintHashAsync
 } from "@ahmedelsharkawycs/browser-fingerprinting"
 
 // Get complete browser fingerprint
-const fingerprint = await getBrowserFingerprintAsync()
+const fingerprint = getBrowserFingerprint()
 console.log("Full fingerprint:", fingerprint)
 
 // Get normalized fingerprint for ID generation
@@ -79,7 +79,7 @@ console.log("Hash ID:", hashId)
 
 ```typescript
 import {
-  getBrowserFingerprintAsync,
+  getBrowserFingerprint,
   normalizeFingerprint,
   getFingerprintBase64,
   getFingerprintHashAsync,
@@ -89,7 +89,7 @@ import {
 
 async function generateFingerprint(): Promise<string> {
   // Get complete fingerprint with full type safety
-  const fingerprint: BrowserFingerprint = await getBrowserFingerprintAsync()
+  const fingerprint: BrowserFingerprint = getBrowserFingerprint()
 
   // Normalize for consistent ID generation
   const normalized: NormalizedBrowserFingerprint = normalizeFingerprint(fingerprint)
@@ -105,7 +105,7 @@ async function generateFingerprint(): Promise<string> {
 
 ### Core Functions
 
-#### getBrowserFingerprintAsync(): Promise<BrowserFingerprint>
+#### getBrowserFingerprint(): BrowserFingerprint
 
 Collects comprehensive browser and device information.
 
@@ -166,7 +166,6 @@ Generates a SHA-256 hash-based unique identifier.
 
 - **Canvas Fingerprint**: Rendered canvas signature
 - **WebGL Information**: Graphics card vendor and renderer
-- **Audio Fingerprint**: Audio context characteristics (falls back to audio capabilities when user gesture is required)
 - **Font Detection**: Available system fonts
 
 ### Network & Storage
@@ -187,10 +186,10 @@ Generates a SHA-256 hash-based unique identifier.
 ### Custom Fingerprint Processing
 
 ```typescript
-import { getBrowserFingerprintAsync, normalizeFingerprint, getFingerprintHashAsync } from "@ahmedelsharkawycs/browser-fingerprinting"
+import { getBrowserFingerprint, normalizeFingerprint, getFingerprintHashAsync } from "@ahmedelsharkawycs/browser-fingerprinting"
 
 async function createCustomFingerprint() {
-  const fingerprint = await getBrowserFingerprintAsync()
+  const fingerprint = getBrowserFingerprint()
 
   // Custom processing for specific use cases
   const customData = {
@@ -210,8 +209,8 @@ async function createCustomFingerprint() {
 
 ```typescript
 async function compareFingerprints() {
-  const fp1 = await getBrowserFingerprintAsync()
-  const fp2 = await getBrowserFingerprintAsync() // Later session
+  const fp1 = getBrowserFingerprint()
+  const fp2 = getBrowserFingerprint() // Later session
 
   const id1 = await getFingerprintHashAsync(normalizeFingerprint(fp1))
   const id2 = await getFingerprintHashAsync(normalizeFingerprint(fp2))
@@ -226,7 +225,7 @@ async function compareFingerprints() {
 
 ```typescript
 async function detectSuspiciousActivity(userFingerprint: string) {
-  const currentFingerprint = await getFingerprintHashAsync(normalizeFingerprint(await getBrowserFingerprintAsync()))
+  const currentFingerprint = await getFingerprintHashAsync(normalizeFingerprint(getBrowserFingerprint()))
 
   return userFingerprint !== currentFingerprint
 }
@@ -236,7 +235,7 @@ async function detectSuspiciousActivity(userFingerprint: string) {
 
 ```typescript
 async function trackUniqueVisitors() {
-  const fingerprint = await getBrowserFingerprintAsync()
+  const fingerprint = getBrowserFingerprint()
   const visitorId = getFingerprintBase64(normalizeFingerprint(fingerprint))
 
   // Send to analytics without personal data
@@ -248,7 +247,7 @@ async function trackUniqueVisitors() {
 
 ```typescript
 async function validateSession(storedFingerprintId: string) {
-  const currentId = await getFingerprintHashAsync(normalizeFingerprint(await getBrowserFingerprintAsync()))
+  const currentId = await getFingerprintHashAsync(normalizeFingerprint(getBrowserFingerprint()))
 
   if (currentId !== storedFingerprintId) {
     // Potential session hijacking
@@ -269,10 +268,6 @@ async function validateSession(storedFingerprintId: string) {
 | Opera   | 47+     | Full support   |
 
 **Note**: Some features may have limited availability on older browsers or privacy-focused configurations.
-
-### Audio Fingerprinting
-
-Due to browser security policies, AudioContext creation requires a user gesture. The library automatically falls back to audio capability detection when AudioContext cannot be created, ensuring the fingerprinting process never fails due to this restriction.
 
 ## Privacy & Ethics
 

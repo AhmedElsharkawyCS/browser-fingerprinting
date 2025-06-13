@@ -84,7 +84,6 @@ export type BrowserFingerprint = {
   deviceMemory: number | "unknown"
   webgl: WebGLInfo
   canvasFingerprint: string
-  audioFingerprint: string
   fontCheck: FontCheck
   plugins: PluginInfo[]
   mimeTypes: MimeTypeInfo[]
@@ -108,7 +107,6 @@ export type NormalizedBrowserFingerprint = {
   webglVendor: string
   webglRenderer: string
   fonts: FontCheck
-  audio: boolean
   touchSupport: TouchSupport
   plugins: string[]
   mimeTypes: string[]
@@ -132,19 +130,4 @@ export type ExtendedNavigator = Navigator & {
     errorCallback: (error: any) => void
   ) => void
   mozGetUserMedia?: (constraints: MediaStreamConstraints, successCallback: (stream: MediaStream) => void, errorCallback: (error: any) => void) => void
-}
-
-export type ExtendedWindow = Window & {
-  AudioContext?: {
-    new (contextOptions?: AudioContextOptions): AudioContext
-    prototype: AudioContext
-  }
-  webkitAudioContext?: {
-    new (contextOptions?: AudioContextOptions): AudioContext
-    prototype: AudioContext
-  }
-  chrome?: unknown
-  opera?: unknown
-  InstallTrigger?: unknown
-  doNotTrack?: string
 }

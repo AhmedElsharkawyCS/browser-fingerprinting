@@ -1,9 +1,6 @@
-// path: utils/browserFingerprint.ts
-
-import { BrowserFingerprint, ExtendedNavigator, ExtendedWindow, NormalizedBrowserFingerprint } from "./types"
+import { BrowserFingerprint, ExtendedNavigator, NormalizedBrowserFingerprint } from "./types"
 
 const navigatorWithExtensions = navigator as ExtendedNavigator
-const windowWithExtensions = window as ExtendedWindow
 
 function getCanvasFingerprint(): string {
   try {
@@ -24,142 +21,7 @@ function getCanvasFingerprint(): string {
   return "unknown"
 }
 
-async function getAudioFingerprint(): Promise<string> {
-  try {
-    // Check if AudioContext is available
-    const AudioContextConstructor = windowWithExtensions.AudioContext || windowWithExtensions.webkitAudioContext
-    if (!AudioContextConstructor) {
-      return "no-audio-context"
-    }
-
-    let audioContext: AudioContext
-
-    try {
-      audioContext = new AudioContextConstructor()
-    } catch (error) {
-      // AudioContext creation failed, likely due to user gesture requirement
-      return getAudioCapabilitiesFingerprint()
-    }
-
-    // Check if the context is suspended (requires user gesture)
-    if (audioContext.state === "suspended") {
-      // Don't try to resume without user gesture, just use fallback
-      audioContext.close()
-      return getAudioCapabilitiesFingerprint()
-    }
-
-    // If context is running, try to get audio fingerprint
-    if (audioContext.state === "running") {
-      try {
-        const oscillator = audioContext.createOscillator()
-        const analyser = audioContext.createAnalyser()
-        const gain = audioContext.createGain()
-        const scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1)
-
-        return await new Promise<string>((resolve, reject) => {
-          // Set a timeout to prevent hanging
-          const timeout = setTimeout(() => {
-            audioContext.close()
-            resolve(getAudioCapabilitiesFingerprint())
-          }, 1000)
-
-          oscillator.connect(analyser)
-          analyser.connect(scriptProcessor)
-          scriptProcessor.connect(gain)
-          gain.connect(audioContext.destination)
-
-          oscillator.type = "triangle"
-          oscillator.frequency.value = 10000
-
-          scriptProcessor.onaudioprocess = (e) => {
-            clearTimeout(timeout)
-            try {
-              // Use a more deterministic approach for audio fingerprinting
-              const audioData = e.inputBuffer.getChannelData(0)
-              const sum = audioData.reduce((acc, val, idx) => acc + Math.abs(val) * idx, 0)
-              const fingerprint = Math.round(sum * 1000000).toString()
-              audioContext.close()
-              resolve(fingerprint)
-            } catch (error) {
-              audioContext.close()
-              resolve(getAudioCapabilitiesFingerprint())
-            }
-          }
-
-          oscillator.start(0)
-        })
-      } catch (error) {
-        audioContext.close()
-        return getAudioCapabilitiesFingerprint()
-      }
-    }
-
-    // Context in unknown state, close and use fallback
-    audioContext.close()
-    return getAudioCapabilitiesFingerprint()
-  } catch (error) {
-    // Any other error, use fallback
-    return getAudioCapabilitiesFingerprint()
-  }
-}
-
-function getAudioCapabilitiesFingerprint(): string {
-  try {
-    // Generate a fingerprint based on audio capabilities without requiring user gesture
-    const capabilities = {
-      hasAudioContext: !!(windowWithExtensions.AudioContext || windowWithExtensions.webkitAudioContext),
-      hasWebAudio: typeof window !== "undefined" && "AudioContext" in window,
-      hasMediaDevices: !!navigator.mediaDevices,
-      hasGetUserMedia: !!(
-        navigatorWithExtensions.getUserMedia ||
-        navigatorWithExtensions.webkitGetUserMedia ||
-        navigatorWithExtensions.mozGetUserMedia
-      ),
-      audioFormats: {
-        mp3: canPlayAudioType("audio/mpeg"),
-        wav: canPlayAudioType("audio/wav"),
-        ogg: canPlayAudioType("audio/ogg"),
-        m4a: canPlayAudioType("audio/mp4"),
-        webm: canPlayAudioType("audio/webm")
-      }
-    }
-    return JSON.stringify(capabilities)
-  } catch (_) {
-    return "audio-capabilities-unknown"
-  }
-}
-
-function canPlayAudioType(type: string): boolean {
-  try {
-    const audio = document.createElement("audio")
-    return audio.canPlayType(type) !== ""
-  } catch (_) {
-    return false
-  }
-}
-
-async function getLocalIPs(): Promise<string[]> {
-  return new Promise((resolve) => {
-    const ips: Set<string> = new Set()
-    try {
-      const rtc = new RTCPeerConnection({ iceServers: [] })
-      rtc.createDataChannel("")
-      rtc.onicecandidate = (e) => {
-        if (e.candidate) {
-          const ipMatch = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate)
-          if (ipMatch) ips.add(ipMatch[1])
-        } else {
-          resolve(Array.from(ips))
-        }
-      }
-      rtc.createOffer().then((offer) => rtc.setLocalDescription(offer))
-    } catch (_) {
-      resolve([])
-    }
-  })
-}
-
-async function getBrowserFingerprintAsync(): Promise<BrowserFingerprint> {
+function getBrowserFingerprint(): BrowserFingerprint {
   const {
     userAgent,
     platform,
@@ -189,9 +51,6 @@ async function getBrowserFingerprintAsync(): Promise<BrowserFingerprint> {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
   const canvasFingerprint = getCanvasFingerprint()
-  const audioFingerprint = await getAudioFingerprint()
-  // Remove localIPs as they can change dynamically
-  // const localIPs = await getLocalIPs()
 
   const fonts = ["Arial", "Times New Roman", "Courier New", "Comic Sans MS", "Verdana", "Georgia"]
   const fontCheck: Record<string, boolean> = {}
@@ -269,7 +128,6 @@ async function getBrowserFingerprintAsync(): Promise<BrowserFingerprint> {
     hardwareConcurrency,
     deviceMemory,
     canvasFingerprint,
-    audioFingerprint,
     fontCheck,
     webgl: { vendor: webglVendor, renderer: webglRenderer },
     plugins: Array.from(plugins).map((p) => ({ name: p.name, filename: p.filename, description: p.description })),
@@ -294,7 +152,6 @@ function normalizeFingerprint(f: BrowserFingerprint): NormalizedBrowserFingerpri
       devicePixelRatio: f.screen.devicePixelRatio
     },
     timezone: f.timezone,
-    audio: f.audioFingerprint !== "unknown" && f.audioFingerprint !== "no-audio-context" && f.audioFingerprint !== "audio-capabilities-unknown",
     deviceMemory: f.deviceMemory,
     hardwareConcurrency: f.hardwareConcurrency,
     fonts: f.fontCheck,
@@ -333,4 +190,4 @@ async function getFingerprintHashAsync(
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
 }
 
-export { getBrowserFingerprintAsync, normalizeFingerprint, stringifyFingerprint, getFingerprintBase64, getFingerprintHashAsync }
+export { getBrowserFingerprint, normalizeFingerprint, stringifyFingerprint, getFingerprintBase64, getFingerprintHashAsync }
